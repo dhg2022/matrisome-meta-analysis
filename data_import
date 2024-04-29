@@ -1,0 +1,9 @@
+```{r}
+bhaduri <- CreateSeuratObject(counts = counts, project = "bhaduri", min.cells = 3, min.features = 200)
+
+bhaduri@meta.data$author_celltype <- meta$CellType
+table (bhaduri$author_celltype)
+
+bhaduri@meta.data$gestation <- meta$Age
+table (bhaduri$gestation)
+```
