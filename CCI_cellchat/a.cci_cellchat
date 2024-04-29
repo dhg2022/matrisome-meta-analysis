@@ -1,0 +1,127 @@
+```{r}
+merged_seurat[["RNA"]] <- JoinLayers(merged_seurat[["RNA"]])
+```
+
+```{r}
+library(CellChat)
+cellchat <- createCellChat(object = merged_seurat, group.by = "customclassif_merged", assay = "RNA")
+```
+
+```{r}
+CellChatDB <- CellChatDB.human
+showDatabaseCategory(CellChatDB)
+cellchat@DB <- CellChatDB.use
+```
+
+# preprocessing
+```{r}
+cellchat <- subsetData(cellchat) # This step is necessary even if using the whole database
+
+future::plan("multisession", workers = 4)
+options(future.globals.maxSize = +Inf)
+
+cellchat <- identifyOverExpressedGenes(cellchat)
+cellchat <- identifyOverExpressedInteractions(cellchat)
+
+cellchat <- computeCommunProb(cellchat, type = "triMean")
+cellchat <- filterCommunication(cellchat, min.cells = 10)
+```
+
+```{r}
+cellchat <- computeCommunProbPathway(cellchat)
+cellchat <- aggregateNet(cellchat)
+print(as.numeric(execution.time, units = "secs"))
+```
+
+
+```{r}
+groupSize <- as.numeric(table(cellchat@idents))
+par(mfrow = c(1,2), xpd=TRUE)
+netVisual_circle(cellchat@net$count, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Number of interactions")
+netVisual_circle(cellchat@net$weight, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Interaction weights/strength")
+```
+
+```{r}
+mat <- cellchat@net$weight
+par(mfrow = c(3,4), xpd=TRUE)
+for (i in 1:nrow(mat)) {
+  mat2 <- matrix(0, nrow = nrow(mat), ncol = ncol(mat), dimnames = dimnames(mat))
+  mat2[i, ] <- mat[i, ]
+  netVisual_circle(mat2, vertex.weight = groupSize, weight.scale = T, edge.weight.max = max(mat), title.name = rownames(mat)[i])
+}
+
+plots <- lapply(1:nrow(mat), function(i) {
+  mat2 <- matrix(0, nrow = nrow(mat), ncol = ncol(mat), dimnames = dimnames(mat))
+  mat2[i, ] <- mat[i, ]
+  p <- netVisual_circle(mat2, vertex.weight = groupSize, weight.scale = TRUE, edge.weight.max = max(mat), title.name = rownames(mat)[i])
+  return(p)
+})
+
+plot_grid(plotlist = plots, ncol = 4)
+```
+
+```{r}
+cellchat@netP$pathways
+pathways.show <- c("SPP1") 
+vertex.receiver = seq(1,4) # a numeric vector. 
+netVisual_aggregate(cellchat, signaling = pathways.show,  vertex.receiver = vertex.receiver)
+par(mfrow=c(1,1))
+netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
+```
+
+```{r}
+spp_chord <- netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
+spp_ht <- netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
+```
+
+```{r}
+pathways.show <- c("CD99") 
+# Hierarchy plot
+# Here we define `vertex.receive` so that the left portion of the hierarchy plot shows signaling to fibroblast and the right portion shows signaling to immune cells 
+vertex.receiver = seq(1,4) # a numeric vector. 
+netVisual_aggregate(cellchat, signaling = pathways.show,  vertex.receiver = vertex.receiver)
+# Circle plot
+par(mfrow=c(1,1))
+netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
+```
+
+```{r}
+cd99_chord <- netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
+cd99_ht<- netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
+```
+
+```{r}
+cellchat@netP$pathways
+```
+
+```{r}
+pathways.show <- c("GRN") 
+vertex.receiver = seq(1,4) # a numeric vector. 
+netVisual_aggregate(cellchat, signaling = pathways.show,  vertex.receiver = vertex.receiver)
+par(mfrow=c(1,1))
+netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
+```
+
+```{r}
+grn_chord <- netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
+grn_ht<- netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
+```
+
+```{r}
+netAnalysis_contribution(cellchat, signaling = pathways.show)
+```
+
+```{r}
+sig_path <- cellchat@netP$pathways
+
+plot_list <- list()
+
+
+for (path in sig_path) {
+  pathways.show <- c(path)
+  plot_list[[path]] <- list(
+    netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord"),
+    netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
+  )
+}
+```
