@@ -1,0 +1,76 @@
+library(future)
+options(future.globals.maxSize = +Inf)
+
+plan()
+plan("multisession", workers = 4)
+plan()
+
+
+```{r}
+colpal <- c ("#298D86", "#CA2F40", "#F3EEC1")
+```
+
+# import matrisome db
+```{r}
+matrisome <- read.table("C:/Users/r02dg22/OneDrive - University of Aberdeen/scrna_seq/matrisome_meta_analysis/Hs_Matrisome_Masterlist.csv", header = T, sep = ',')
+#extract gene symbols
+matrisome_list <- matrisome$Gene_Symbol
+```
+
+
+#split core and associated matrisome lists
+```{r}
+core_matrisome <- subset(matrisome, subset = Division == "Core matrisome")
+associated_matrisome <- subset(matrisome, subset = Division == "Matrisome-associated")
+
+# extrarct gene symbol 
+selected_core_matrisome <- core_matrisome$Gene_Symbol
+selected_associated_matrisome <- associated_matrisome$Gene_Symbol
+```
+
+
+```{r}
+to_keep <- c('vRG', 'oRG', 'tRG', 'IPC', 'Imm. PN', 'CPN')
+neurolin_seurat <- subset(merged_seurat, subset = customclassif_merged %in% to_keep)
+RG <- c("vRG", "oRG", "tRG")
+PC <- c("IPC")
+PN <- c("Imm. PN", "CPN")
+
+neurolin_seurat$lineage <- ifelse (neurolin_seurat$customclassif_merged %in% RG, "RG",
+                                 ifelse( neurolin_seurat$customclassif_merged %in% PC, "IPC",
+                                         "PN"))
+
+Idents(neurolin_seurat) <- neurolin_seurat$lineage
+my_levels <- c('RG', 'IPC', 'PN')
+neurolin_seurat@active.ident <- factor(x = neurolin_seurat@active.ident, levels = my_levels)
+```
+
+#find markers to sort heatmap by features
+
+```{r}
+neurolin.all.markers <- FindAllMarkers(neurolin_seurat, only.pos = T)
+```
+#all matrisome
+```{r}
+neurolin_matrisome_markers <- subset (neurolin.all.markers, neurolin.all.markers$gene %in%  matrisome_list)
+neurolin_matrisome_markers <- subset (neurolin_matrisome_markers, subset = pct.1 > 0.25)
+```
+#core
+```{r}
+neurolin_core_matrisome_markers <- subset (neurolin.all.markers, subset = neurolin.all.markers$gene %in% selected_core_matrisome)
+#associated
+neurolin_associated_matrisome_markers <- subset (neurolin.all.markers, subset = neurolin.all.markers$gene %in% selected_associated_matrisome)
+core_sub_matrisome_markers <- subset (neurolin_core_matrisome_markers, subset = pct.1 > 0.25)
+associated_sub_matrisome_markers <- subset (neurolin_associated_matrisome_markers, subset = pct.1 > 0.25)
+
+
+
+
+
+
+
+
+
+
+
+
