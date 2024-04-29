@@ -17,6 +17,7 @@ Idents(microglia_seurat) <- microglia_seurat$bracket
 my_levels <- c('T1', 'early T2','late T2')
 microglia_seurat@active.ident <- factor(x = microglia_seurat@active.ident, levels = my_levels)
 mic_markers <- FindAllMarkers(microglia_seurat, only.pos = T)
+mic_markers <- subset(microglia_seurat, pct.1 > 0.25)
 mic_core_marker <- subset (mic_markers, gene %in% core_matrisome$Gene_Symbol)
 mic_associated_marker <- subset (mic_markers, gene %in% associated_matrisome$Gene_Symbol)
 micmat_markers <- subset (mic_markers, subset = rownames(mic_markers) %in% matrisome_list)
