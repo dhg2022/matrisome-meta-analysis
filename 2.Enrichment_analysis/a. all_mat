@@ -2,7 +2,7 @@
 
 # import matrisome db
 ```{r}
-matrisome <- read.table("C:/Users/r02dg22/OneDrive - University of Aberdeen/scrna_seq/matrisome_meta_analysis/Hs_Matrisome_Masterlist.csv", header = T, sep = ',')
+matrisome <- read.table("~/Hs_Matrisome_Masterlist.csv", header = T, sep = ',')
 #extract gene symbols
 matrisome_list <- matrisome$Gene_Symbol
 ```
