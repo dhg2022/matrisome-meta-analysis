@@ -1,0 +1,90 @@
+```{r}
+colpal <- c ("#298D86", "#C58862", "#7F517D")
+
+merged_seurat2<- merged_seurat
+RG <- c("vRG", "oRG", "tRG")
+
+
+
+  study_cells <- which(merged_seurat2$customclassif_merged %in% RG)
+  
+rg_plot <- DimPlot(merged_seurat2, label = FALSE, group.by = "customclassif_merged",
+                  cells.highlight = study_cells,
+                  cols.highlight = '#298D86',
+                  cols = "grey",
+                  raster = FALSE) + NoLegend() + ggtitle("vRG & oRG & tRG") + NoAxes()
+
+
+  study_cells <- which(merged_seurat2$customclassif_merged == "OPC")
+  
+opc_plot <- DimPlot(merged_seurat2, label = FALSE, group.by = "customclassif_merged",
+                  cells.highlight = study_cells,
+                  cols.highlight = '#C58862',
+                  cols = "grey",
+                  raster = FALSE) + NoLegend() + ggtitle("OPC") + NoAxes()
+
+  study_cells <- which(merged_seurat2$customclassif_merged == "Astro.")
+  
+apc_plot <- DimPlot(merged_seurat2, label = FALSE, group.by = "customclassif_merged",
+                  cells.highlight = study_cells,
+                  cols.highlight = '#7F517D',
+                  cols = "grey",
+                  raster = FALSE) + NoLegend() + ggtitle("Astro.") + NoAxes()
+```
+
+```{r}
+to_keep <- c('vRG', 'oRG', 'tRG', 'OPC', 'Astro.')
+macro_seurat <- subset(merged_seurat, subset = customclassif_merged %in% to_keep)
+
+RG <- c("vRG", "oRG", "tRG")
+macro_seurat$lineage <- ifelse (macro_seurat$customclassif_merged %in% RG, "RG",
+                                 as.character (macro_seurat$customclassif_merged))
+Idents(macro_seurat) <- macro_seurat$lineage
+my_levels <- c('RG', 'OPC', 'Astro.')
+macro_seurat@active.ident <- factor(x = macro_seurat@active.ident, levels = my_levels)
+```
+
+#find markers
+
+```{r}
+macro.all.markers <- FindAllMarkers(macro_seurat, only.pos = T)
+macro_matrisome_markers <- subset (macro.all.markers, macro.all.markers$gene %in%  matrisome_list)
+macro_matrisome_markers <- subset (macro_matrisome_markers, subset = pct.1 > 0.25)
+```
+
+```{r}
+#core
+macro_core_matrisome_markers <- subset (macro.all.markers, subset = macro.all.markers$gene %in% selected_core_matrisome)
+#associated
+macro_associated_matrisome_markers <- subset (macro.all.markers, subset = macro.all.markers$gene %in% selected_associated_matrisome)
+
+core_sub_matrisome_markers <- subset (macro_core_matrisome_markers, subset = pct.1 > 0.25)
+associated_sub_matrisome_markers <- subset (macro_associated_matrisome_markers, subset = pct.1 > 0.25)
+```
+
+#pseudo for visualisation
+
+```{r}
+macro_seurat[["RNA"]] <- JoinLayers(macro_seurat[["RNA"]])
+Idents(macro_seurat) <- macro_seurat$lineage
+pseudo_seurat <- AggregateExpression(macro_seurat, assays = "RNA", return.seurat = T, group.by = "lineage")
+
+pseudo_seurat <- NormalizeData(pseudo_seurat, normalization.method = "RC", scale.factor = 1e6)
+pseudo_seurat <- ScaleData(pseudo_seurat)
+my_levels <- c('RG', 'OPC', 'Astro.')
+pseudo_seurat@active.ident <- factor(x = pseudo_seurat@active.ident, levels = my_levels)
+```
+
+
+```{r}
+top20 <- core_sub_matrisome_markers %>%
+  group_by(cluster) %>%
+  top_n(20, avg_log2FC)
+
+ct20_mat_ht <- DoHeatmap(object = pseudo_seurat, features = top20$gene, group.colors = colpal) 
+top20 <- associated_sub_matrisome_markers %>%
+  group_by(cluster) %>%
+  top_n(20, avg_log2FC)
+
+at20_mat_ht <- DoHeatmap(object = pseudo_seurat, features = top20$gene, group.colors = colpal) 
+```
