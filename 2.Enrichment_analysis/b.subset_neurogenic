@@ -62,9 +62,34 @@ neurolin_core_matrisome_markers <- subset (neurolin.all.markers, subset = neurol
 neurolin_associated_matrisome_markers <- subset (neurolin.all.markers, subset = neurolin.all.markers$gene %in% selected_associated_matrisome)
 core_sub_matrisome_markers <- subset (neurolin_core_matrisome_markers, subset = pct.1 > 0.25)
 associated_sub_matrisome_markers <- subset (neurolin_associated_matrisome_markers, subset = pct.1 > 0.25)
+```
+
+#pseudo for visualisation
+
+```{r}
+neurolin_seurat[["RNA"]] <- JoinLayers(neurolin_seurat[["RNA"]])
+Idents(neurolin_seurat) <- neurolin_seurat$lineage
+pseudo_seurat <- AggregateExpression(neurolin_seurat, assays = "RNA", return.seurat = T, group.by = "lineage")
+
+pseudo_seurat <- NormalizeData(pseudo_seurat, normalization.method = "RC", scale.factor = 1e6)
+pseudo_seurat <- ScaleData(pseudo_seurat)
+my_levels <- c('RG', 'IPC', 'PN')
+pseudo_seurat@active.ident <- factor(x = pseudo_seurat@active.ident, levels = my_levels)
+```
 
 
+```{r}
+top20 <- core_sub_matrisome_markers %>%
+  group_by(cluster) %>%
+  top_n(20, avg_log2FC)
 
+ct20_mat_ht <- DoHeatmap(object = pseudo_seurat, features = top20$gene, group.colors = colpal) 
+top20 <- associated_sub_matrisome_markers %>%
+  group_by(cluster) %>%
+  top_n(20, avg_log2FC)
+
+at20_mat_ht <- DoHeatmap(object = pseudo_seurat, features = top20$gene, group.colors = colpal) 
+```
 
 
 
