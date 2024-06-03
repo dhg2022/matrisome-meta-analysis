@@ -61,66 +61,16 @@ plot_grid(plotlist = plots, ncol = 4)
 ```
 
 ```{r}
-cellchat@netP$pathways
-pathways.show <- c("SPP1") 
-vertex.receiver = seq(1,4) # a numeric vector. 
-netVisual_aggregate(cellchat, signaling = pathways.show,  vertex.receiver = vertex.receiver)
-par(mfrow=c(1,1))
-netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
-```
-
-```{r}
-spp_chord <- netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
-spp_ht <- netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
-```
-
-```{r}
-pathways.show <- c("CD99") 
-# Hierarchy plot
-# Here we define `vertex.receive` so that the left portion of the hierarchy plot shows signaling to fibroblast and the right portion shows signaling to immune cells 
-vertex.receiver = seq(1,4) # a numeric vector. 
-netVisual_aggregate(cellchat, signaling = pathways.show,  vertex.receiver = vertex.receiver)
-# Circle plot
-par(mfrow=c(1,1))
-netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
-```
-
-```{r}
-cd99_chord <- netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
-cd99_ht<- netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
-```
-
-```{r}
-cellchat@netP$pathways
-```
-
-```{r}
-pathways.show <- c("GRN") 
-vertex.receiver = seq(1,4) # a numeric vector. 
-netVisual_aggregate(cellchat, signaling = pathways.show,  vertex.receiver = vertex.receiver)
-par(mfrow=c(1,1))
-netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
-```
-
-```{r}
-grn_chord <- netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
-grn_ht<- netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
-```
-
-```{r}
-netAnalysis_contribution(cellchat, signaling = pathways.show)
-```
-
-```{r}
 sig_path <- cellchat@netP$pathways
 
 plot_list <- list()
 
+colpal <- c ("#7F517D","#C1D4E6","#34854D",  "#FCA594","#DEB0B0","#CA2F40","#33608C","#C58862","#FFD5FF","#81B1DE","#C7EBB1")
 
 for (path in sig_path) {
   pathways.show <- c(path)
   plot_list[[path]] <- list(
-    netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord"),
+    netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord", pt.title = 40, color.use = colpal),
     netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
   )
 }
