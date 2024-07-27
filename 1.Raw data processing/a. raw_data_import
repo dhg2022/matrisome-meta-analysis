@@ -12,6 +12,12 @@ bhaduri@meta.data$author_celltype <- meta$CellType
 bhaduri@meta.data$gestation <- meta$Age
 bhaduri@meta.data$region <- meta$Area
 
+regions <- c ('motor', 'PFC')
+bhaduri <- subset (bhaduri, subset = region == regions)
+table (bhaduri$region)
+table (bhaduri$gestation)
+rm (regions)
+
 bhaduri[["percent.mt"]] <- PercentageFeatureSet(bhaduri, pattern = "^MT-")
 bhaduri <- subset (bhaduri, subset = nFeature_RNA > 200 &
                  nFeature_RNA < 8000 &
