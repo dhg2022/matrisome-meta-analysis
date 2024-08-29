@@ -1,6 +1,6 @@
 ```{r}
 merged_seurat[["RNA"]] <- JoinLayers(merged_seurat[["RNA"]])
-pseudo_obj <- AggregateExpression(merged_seurat, assays = "RNA", return.seurat = T, group.by = c("gestation", "customclassif_merged"))
+pseudo_obj <- AggregateExpression(merged_seurat, assays = "RNA", return.seurat = T, group.by = c("gestation", "customclassif_merged", "study"))
 
 Idents(pseudo_obj) <- pseudo_obj$customclassif_merged
 my_levels <- c('vRG', 'oRG', 'tRG', 'IPC', 'Imm. PN', 'CPN', 'DA neuron', 'GABA IN', 'OPC', 'Astro.', 'Microglia')
