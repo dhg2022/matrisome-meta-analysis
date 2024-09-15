@@ -1,0 +1,4 @@
+merged_seurat[["RNA"]] <- JoinLayers(merged_seurat[["RNA"]])
+counts <- GetAssayData(merged_seurat, layer = "data")
+total_counts <- Matrix::rowSums(counts)
+hist(total_counts, breaks = 1000, xlab = "Total Counts", main = "Distribution of Total Counts")
